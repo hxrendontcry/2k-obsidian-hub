@@ -1,0 +1,271 @@
+{
+  "nodes": [
+    {
+      "id": "lua-core",
+      "name": "Luau Core Language",
+      "category": "Fundamentals",
+      "val": 30,
+      "desc": "Luau ภาษาหลักของ Roblox — Types, Metatables, Closures, Coroutines, pcall/xpcall error handling"
+    },
+    {
+      "id": "executor-api",
+      "name": "Executor API",
+      "category": "Fundamentals",
+      "val": 26,
+      "desc": "getgenv, getrenv, getrawmetatable, hookmetamethod, newcclosure, getconnections, getscriptbytecode, filtergc"
+    },
+    {
+      "id": "services",
+      "name": "Roblox Services",
+      "category": "Fundamentals",
+      "val": 20,
+      "desc": "Players, RunService, TweenService, UserInputService, ReplicatedStorage, CoreGui, HttpService, VirtualUser"
+    },
+    {
+      "id": "task-library",
+      "name": "Task Library & Threading",
+      "category": "Fundamentals",
+      "val": 18,
+      "desc": "task.spawn, task.defer, task.wait, task.delay, task.cancel — non-blocking coroutine management"
+    },
+    {
+      "id": "stealth",
+      "name": "Stealth & Anti-Kick",
+      "category": "Bypass",
+      "val": 28,
+      "desc": "hookmetamethod __namecall Kick intercept, getconnections Kicked:Disable(), newcclosure wrapping"
+    },
+    {
+      "id": "anti-afk",
+      "name": "Anti-AFK Engine",
+      "category": "Bypass",
+      "val": 16,
+      "desc": "VirtualUser:CaptureController + ClickButton2 on Idled event — เลี่ยง Idle Kick"
+    },
+    {
+      "id": "anti-cheat-bypass",
+      "name": "Anti-Cheat Detection Bypass",
+      "category": "Bypass",
+      "val": 22,
+      "desc": "Speed/CFrame เปลี่ยนผ่าน Heartbeat, Humanoid manipulation via pcall, Remote throttle guard"
+    },
+    {
+      "id": "remote-spy",
+      "name": "Remote Spy & Interception",
+      "category": "Bypass",
+      "val": 20,
+      "desc": "hookfunction FireServer/InvokeServer, ดัก Arguments ของ Remote Events/Functions ขาออก-ขาเข้า"
+    },
+    {
+      "id": "ui-cyber-neon",
+      "name": "2K Cyber-Neon UI",
+      "category": "UI Architecture",
+      "val": 30,
+      "desc": "Obsidian Navy + Electric Cyan palette, GothamBold สองภาษา, UIStroke + UIGradient glow, Zero Emojis"
+    },
+    {
+      "id": "fluent-ui",
+      "name": "Fluent UI (Acrylic)",
+      "category": "UI Architecture",
+      "val": 18,
+      "desc": "Fluent UI library — Theme Aqua, DarkMode, Acrylic glassmorphism, named '2K Script'"
+    },
+    {
+      "id": "floating-btn",
+      "name": "Floating Toggle Button",
+      "category": "UI Architecture",
+      "val": 16,
+      "desc": "วงกลมลอยน้ำ + ขอบแสงหมุน UIGradient + UIStroke ด้วย TweenService ต่อเนื่อง + Drag/Click separation"
+    },
+    {
+      "id": "drag-click",
+      "name": "Drag vs Click Separation",
+      "category": "UI Architecture",
+      "val": 14,
+      "desc": "(currentPos - clickStart).Magnitude < 6px = click, มากกว่า = drag — ป้องกัน toggle กะพริบตอนลากหน้าต่าง"
+    },
+    {
+      "id": "ui-teardown",
+      "name": "UI Teardown Pattern",
+      "category": "UI Architecture",
+      "val": 16,
+      "desc": "ก่อนสร้าง UI ใหม่ต้อง Destroy CoreGui + PlayerGui instance เก่า + Disconnect events + Cancel threads"
+    },
+    {
+      "id": "tween-system",
+      "name": "TweenService Animation",
+      "category": "UI Architecture",
+      "val": 14,
+      "desc": "TweenInfo Quart/Back/Linear, tween helper wrapper, อนิเมชั่น Toggle slide, Window open/close scale"
+    },
+    {
+      "id": "auto-farm",
+      "name": "Auto Farm Engine",
+      "category": "Game Automation",
+      "val": 28,
+      "desc": "Flag-based loop ด้วย task.spawn, Heartbeat binding, Proximity check ก่อน interact, Item/Mob farming loop"
+    },
+    {
+      "id": "auto-parry",
+      "name": "Auto Parry System",
+      "category": "Game Automation",
+      "val": 24,
+      "desc": "Time-to-Impact ด้วย Dot Product + Distance/Speed, Ping offset compensation, Heartbeat polling"
+    },
+    {
+      "id": "esp",
+      "name": "ESP & Wallhack",
+      "category": "Game Automation",
+      "val": 20,
+      "desc": "BillboardGui บน Character, WorldToViewportPoint visibility check, Health/Name/Distance overlay"
+    },
+    {
+      "id": "aimbot",
+      "name": "Aimbot & Silent Aim",
+      "category": "Game Automation",
+      "val": 22,
+      "desc": "hookfunction FindPartOnRayWithWhitelist/WorldRoot, closest-player targeting, FOV circle filter"
+    },
+    {
+      "id": "speed-fly",
+      "name": "Speed & Fly Hacks",
+      "category": "Game Automation",
+      "val": 18,
+      "desc": "Humanoid.WalkSpeed/JumpPower override, BodyVelocity fly via Heartbeat, NoClip via Stepped loop"
+    },
+    {
+      "id": "remote-fire",
+      "name": "Remote Manipulation",
+      "category": "Game Automation",
+      "val": 22,
+      "desc": "FireServer/InvokeServer ด้วย validated args, ตรวจสอบ Coins/Cooldown/Distance ก่อนยิง Remote ทุกครั้ง"
+    },
+    {
+      "id": "connection-maid",
+      "name": "Connection Maid Pattern",
+      "category": "Architecture",
+      "val": 20,
+      "desc": "เก็บ RBXScriptConnection ใน table, Cleanup loop ด้วย :Disconnect(), task.cancel threads เมื่อ Toggle off"
+    },
+    {
+      "id": "getgenv-flags",
+      "name": "getgenv() Flag System",
+      "category": "Architecture",
+      "val": 16,
+      "desc": "ใช้ getgenv().flags เก็บสถานะ global เพื่อให้ re-run สคริปต์ได้โดยไม่ซ้อน instance"
+    },
+    {
+      "id": "single-file",
+      "name": "Single-File Self-Contained",
+      "category": "Architecture",
+      "val": 18,
+      "desc": "ฝัง Base64 Logo, Library, Logic ไว้ในไฟล์เดียว รันผ่าน Executor ได้ทันทีไม่พึ่งไฟล์แยก"
+    },
+    {
+      "id": "pcall-safety",
+      "name": "pcall Safety Wrapper",
+      "category": "Architecture",
+      "val": 14,
+      "desc": "ครอบทุก API ที่อาจ Error ด้วย pcall — hookmetamethod, GetUserThumbnail, HttpGet, WaitForChild"
+    },
+    {
+      "id": "mcp-executor",
+      "name": "MCP Executor Bridge",
+      "category": "Tooling",
+      "val": 22,
+      "desc": "roblox-executor-mcp: execute, get-data-by-code, get-console-output, search-instances, remote-spy"
+    },
+    {
+      "id": "loader",
+      "name": "Loader & Script Dispatch",
+      "category": "Tooling",
+      "val": 18,
+      "desc": "PlaceId routing, cachebust ?t= param, fast pre-routed dispatch, loadstring() execution pipeline"
+    },
+    {
+      "id": "bytecode",
+      "name": "Bytecode & Decompile",
+      "category": "Tooling",
+      "val": 16,
+      "desc": "getscriptbytecode → POST to decompiler endpoint, base64 encoding payload, reconstruct source"
+    },
+    {
+      "id": "base64",
+      "name": "Base64 Encode/Decode",
+      "category": "Tooling",
+      "val": 12,
+      "desc": "Inline base64 library สำหรับฝัง PNG Logo และ encode bytecode payload ส่งผ่าน HTTP"
+    },
+    {
+      "id": "real-mcp",
+      "name": "Real MCP Executor",
+      "category": "Tooling",
+      "val": 32,
+      "desc": "Primary AI Executor — 60+ tools: decompile in-memory, gc-scan, fire-remote, remote-spy, dump-anticheat-hooks, live-reload"
+    },
+    {
+      "id": "dumper-tool",
+      "name": "Dumper (vita8it)",
+      "category": "Tooling",
+      "val": 24,
+      "desc": "Instance Tree & Script Extractor — Dump Explorer, ReplicatedStorage Remotes, Local/Module Scripts to disk"
+    }
+  ],
+  "links": [
+    { "source": "lua-core", "target": "executor-api" },
+    { "source": "lua-core", "target": "task-library" },
+    { "source": "lua-core", "target": "pcall-safety" },
+    { "source": "lua-core", "target": "services" },
+    { "source": "executor-api", "target": "stealth" },
+    { "source": "executor-api", "target": "remote-spy" },
+    { "source": "executor-api", "target": "bytecode" },
+    { "source": "executor-api", "target": "aimbot" },
+    { "source": "services", "target": "ui-cyber-neon" },
+    { "source": "services", "target": "auto-farm" },
+    { "source": "services", "target": "esp" },
+    { "source": "services", "target": "anti-afk" },
+    { "source": "task-library", "target": "auto-farm" },
+    { "source": "task-library", "target": "auto-parry" },
+    { "source": "task-library", "target": "connection-maid" },
+    { "source": "stealth", "target": "anti-kick" },
+    { "source": "stealth", "target": "anti-cheat-bypass" },
+    { "source": "stealth", "target": "remote-spy" },
+    { "source": "anti-afk", "target": "stealth" },
+    { "source": "anti-cheat-bypass", "target": "speed-fly" },
+    { "source": "anti-cheat-bypass", "target": "aimbot" },
+    { "source": "remote-spy", "target": "remote-fire" },
+    { "source": "ui-cyber-neon", "target": "floating-btn" },
+    { "source": "ui-cyber-neon", "target": "tween-system" },
+    { "source": "ui-cyber-neon", "target": "ui-teardown" },
+    { "source": "fluent-ui", "target": "ui-cyber-neon" },
+    { "source": "floating-btn", "target": "drag-click" },
+    { "source": "floating-btn", "target": "tween-system" },
+    { "source": "ui-teardown", "target": "connection-maid" },
+    { "source": "ui-teardown", "target": "getgenv-flags" },
+    { "source": "auto-farm", "target": "remote-fire" },
+    { "source": "auto-farm", "target": "connection-maid" },
+    { "source": "auto-parry", "target": "esp" },
+    { "source": "aimbot", "target": "esp" },
+    { "source": "aimbot", "target": "auto-parry" },
+    { "source": "speed-fly", "target": "auto-farm" },
+    { "source": "remote-fire", "target": "pcall-safety" },
+    { "source": "connection-maid", "target": "getgenv-flags" },
+    { "source": "single-file", "target": "base64" },
+    { "source": "single-file", "target": "loader" },
+    { "source": "single-file", "target": "ui-cyber-neon" },
+    { "source": "mcp-executor", "target": "loader" },
+    { "source": "mcp-executor", "target": "remote-spy" },
+    { "source": "loader", "target": "bytecode" },
+    { "source": "base64", "target": "bytecode" },
+    { "source": "getgenv-flags", "target": "single-file" },
+    { "source": "real-mcp", "target": "mcp-executor" },
+    { "source": "real-mcp", "target": "remote-spy" },
+    { "source": "real-mcp", "target": "bytecode" },
+    { "source": "real-mcp", "target": "stealth" },
+    { "source": "real-mcp", "target": "auto-farm" },
+    { "source": "real-mcp", "target": "dumper-tool" },
+    { "source": "dumper-tool", "target": "bytecode" },
+    { "source": "dumper-tool", "target": "remote-fire" },
+    { "source": "dumper-tool", "target": "services" }
+  ]
+}

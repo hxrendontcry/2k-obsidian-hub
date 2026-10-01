@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2K // OBSIDIAN STEALTH C2 — 3D Knowledge Core</title>
+  
+  <!-- Tailwind CSS via Google CDN -->
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  
+  <!-- Three.js + OrbitControls + TWEEN for 3D Graph -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background-color: #030305;
+      color: #cbd5e1;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
+    #webgl-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* Cyberpunk Obsidian Stealth Glass */
+    .stealth-glass {
+      background: rgba(7, 8, 12, 0.84);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+    .stealth-glass:hover {
+      border-color: rgba(255, 255, 255, 0.16);
+    }
+    .stealth-border-active {
+      border: 1px solid rgba(0, 255, 136, 0.5) !important;
+      box-shadow: 0 0 16px rgba(0, 255, 136, 0.2);
+    }
+
+    /* Vignette & Tactical Grid Overlay */
+    .vignette-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+      background: radial-gradient(circle at center, transparent 45%, rgba(3, 3, 5, 0.75) 100%);
+    }
+    .scanlines {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.22) 50%);
+      background-size: 100% 4px;
+      opacity: 0.3;
+    }
+
+    /* Custom tactical scrollbars */
+    ::-webkit-scrollbar {
+      width: 3px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #07080c;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #272a38;
+      border-radius: 1px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #474d64;
+    }
+  </style>
+</head>
+<body class="relative w-screen h-screen">
+
+  <!-- 3D Canvas -->
+  <div id="webgl-canvas"></div>
+  <div class="vignette-overlay"></div>
+  <div class="scanlines"></div>
+
+  <!-- TOP TACTICAL NAVIGATION BAR -->
+  <header class="absolute top-4 left-4 right-4 z-20 flex flex-wrap items-center justify-between gap-3 pointer-events-none">
+    
+    <!-- Brand / C2 Header -->
+    <div class="stealth-glass px-3.5 py-2 rounded flex items-center gap-3 pointer-events-auto shadow-2xl">
+      <div class="w-7 h-7 rounded bg-zinc-900 border border-white/10 flex items-center justify-center text-white shadow-inner">
+        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+        </svg>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-xs font-bold tracking-widest uppercase text-white font-mono">
+            2K // OBSIDIAN CORE
+          </h1>
+          <span class="px-1.5 py-0.2 text-[9px] font-mono tracking-wider text-zinc-400 bg-white/5 border border-white/10 rounded">
+            STEALTH_v3
+          </span>
+        </div>
+        <p class="text-[10px] text-zinc-500 font-mono tracking-wider">TACTICAL KNOWLEDGE RECON // ROB-OS</p>
+      </div>
+    </div>
+
+    <!-- Telemetry & Sensor Counters -->
+    <div class="stealth-glass px-4 py-2 rounded flex items-center gap-4 pointer-events-auto text-xs text-zinc-400 font-mono">
+      <div class="flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span>
+        <span>NODES: <strong id="stat-nodes" class="text-white">0</strong></span>
+      </div>
+      <div class="w-px h-3.5 bg-zinc-800"></div>
+      <div class="flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-zinc-500"></span>
+        <span>LINKS: <strong id="stat-links" class="text-white">0</strong></span>
+      </div>
+      <div class="w-px h-3.5 bg-zinc-800"></div>
+      <button id="btn-toggle-autorotate" class="flex items-center gap-1.5 px-2 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-white/10 transition-all text-[11px]">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="rotate-label">ORBIT: ON</span>
+      </button>
+      <button id="btn-reset-cam" class="flex items-center gap-1 px-2 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-white/10 transition-all text-[11px]">
+        RESET_CAM
+      </button>
+    </div>
+
+    <!-- Real MCP Live Sensor Badge -->
+    <div id="mcp-live-badge" title="Real MCP Bridge Status" class="stealth-glass px-3.5 py-1.5 rounded flex items-center gap-2.5 pointer-events-auto cursor-pointer border border-white/10 hover:border-white/20 transition-all">
+      <span class="relative flex h-2 w-2">
+        <span id="mcp-ping-dot" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 hidden"></span>
+        <span id="mcp-status-dot" class="relative inline-flex rounded-full h-2 w-2 bg-amber-400"></span>
+      </span>
+      <div class="flex flex-col text-left">
+        <div class="flex items-center gap-1.5 leading-none">
+          <span class="text-[9px] uppercase font-bold tracking-wider text-zinc-400 font-mono">REAL_MCP</span>
+          <span id="mcp-client-count-tag" class="px-1 py-0.2 rounded text-[9px] font-mono bg-zinc-900 text-zinc-300 border border-zinc-800">0</span>
+        </div>
+        <span id="mcp-status-text" class="text-[10px] font-mono text-amber-300 leading-tight">INITIALIZING</span>
+      </div>
+    </div>
+
+    <!-- Search & Utility Controls -->
+    <div class="stealth-glass px-3 py-1.5 rounded flex items-center gap-2 pointer-events-auto">
+      <div class="relative">
+        <input 
+          id="search-input" 
+          type="text" 
+          placeholder="> SEARCH_INTEL..." 
+          class="w-56 px-2.5 py-1 text-xs bg-zinc-950/80 border border-white/10 rounded text-white placeholder-zinc-600 focus:outline-none focus:border-white/30 font-mono transition-all"
+        />
+        <div id="search-results" class="absolute top-9 left-0 w-72 max-h-60 overflow-y-auto stealth-glass rounded hidden p-1.5 z-30 shadow-2xl border border-white/10"></div>
+      </div>
+
+      <button id="btn-open-settings" title="Tactical Physics Settings" class="p-1.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-white/10 transition-all">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+      </button>
+
+      <button id="btn-add-node" title="Deploy Intel Node" class="px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-mono font-bold flex items-center gap-1.5 border border-white/15 transition-all">
+        <span>+</span> NEW_NODE
+      </button>
+    </div>
+
+  </header>
+
+  <!-- BOTTOM CLUSTER TACTICAL FILTERS -->
+  <footer class="absolute bottom-4 left-4 right-4 z-20 flex items-center justify-center pointer-events-none">
+    <div id="category-pills" class="stealth-glass px-3 py-1.5 rounded flex items-center gap-1.5 overflow-x-auto max-w-full pointer-events-auto border border-white/10">
+      <!-- Injected via JS -->
+    </div>
+  </footer>
+
+  <!-- RIGHT TACTICAL INTEL INSPECTOR DRAWER -->
+  <aside id="node-drawer" class="absolute top-20 right-4 w-96 max-h-[82vh] stealth-glass rounded p-5 z-20 hidden pointer-events-auto flex flex-col justify-between overflow-y-auto border border-white/15 shadow-2xl">
+    <div>
+      <div class="flex items-center justify-between pb-3 mb-3 border-b border-white/10">
+        <div class="flex items-center gap-2">
+          <span id="drawer-cluster-tag" class="px-2 py-0.5 rounded text-[10px] uppercase font-mono font-bold bg-white/5 border border-white/10 text-zinc-300">
+            CLUSTER
+          </span>
+          <span class="text-[10px] text-zinc-500 font-mono">SEC.ID // 0x2A</span>
+        </div>
+        <button id="drawer-close" class="text-zinc-500 hover:text-white p-1 rounded transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <h2 id="drawer-title" class="text-base font-bold text-white mb-2 font-mono tracking-tight leading-snug">
+        Node Title
+      </h2>
+
+      <div class="text-xs text-zinc-400 mb-4 leading-relaxed font-sans" id="drawer-desc">
+        Description
+      </div>
+
+      <!-- Tactical Metrics -->
+      <div class="grid grid-cols-2 gap-2 mb-4 font-mono text-[11px]">
+        <div class="p-2 rounded bg-zinc-950/70 border border-white/5">
+          <div class="text-zinc-600 text-[9px] uppercase">GRAVITY / VALUE</div>
+          <div id="drawer-val" class="font-bold text-white text-sm">24 pt</div>
+        </div>
+        <div class="p-2 rounded bg-zinc-950/70 border border-white/5">
+          <div class="text-zinc-600 text-[9px] uppercase">CONNECTIONS</div>
+          <div id="drawer-connections-count" class="font-bold text-white text-sm">0 Links</div>
+        </div>
+      </div>
+
+      <!-- Interlinked Nodes -->
+      <div class="mb-4">
+        <h4 class="text-[10px] font-mono uppercase text-zinc-500 tracking-wider mb-2">TELEMETRY LINKS</h4>
+        <div id="drawer-links" class="flex flex-wrap gap-1.5">
+          <!-- Tags injected -->
+        </div>
+      </div>
+    </div>
+
+    <div class="pt-3 border-t border-white/10 flex items-center justify-between">
+      <button id="drawer-focus-btn" class="w-full py-1.5 rounded bg-zinc-900 hover:bg-zinc-800 text-white border border-white/15 text-xs font-mono font-bold transition-all">
+        LOCK_RADAR_TARGET
+      </button>
+    </div>
+  </aside>
+
+  <!-- SETTINGS MODAL -->
+  <aside id="settings-panel" class="absolute top-20 left-4 w-80 stealth-glass rounded p-5 z-20 hidden pointer-events-auto border border-white/15 shadow-2xl">
+    <div class="flex items-center justify-between pb-3 mb-3 border-b border-white/10">
+      <h3 class="text-xs font-bold text-white font-mono uppercase tracking-wider">RADAR PHYSICS CALIBRATION</h3>
+      <button id="settings-close" class="text-zinc-500 hover:text-white transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="space-y-4 text-xs font-mono">
+      <div>
+        <div class="flex justify-between text-zinc-400 mb-1">
+          <span>Repulsion Force</span>
+          <span id="val-repulsion" class="text-white">150</span>
+        </div>
+        <input id="slider-repulsion" type="range" min="30" max="400" value="150" class="w-full accent-white bg-zinc-900 rounded h-1 cursor-pointer">
+      </div>
+
+      <div>
+        <div class="flex justify-between text-zinc-400 mb-1">
+          <span>Link Distance</span>
+          <span id="val-distance" class="text-white">60</span>
+        </div>
+        <input id="slider-distance" type="range" min="20" max="180" value="60" class="w-full accent-white bg-zinc-900 rounded h-1 cursor-pointer">
+      </div>
+
+      <div class="pt-2 border-t border-white/10 space-y-2">
+        <label class="flex items-center gap-2 text-zinc-300 cursor-pointer">
+          <input id="check-labels" type="checkbox" checked class="accent-white rounded">
+          <span>Display Target Labels</span>
+        </label>
+        <label class="flex items-center gap-2 text-zinc-300 cursor-pointer">
+          <input id="check-photons" type="checkbox" checked class="accent-white rounded">
+          <span>Signal Laser Pulses</span>
+        </label>
+      </div>
+
+      <div class="pt-2 border-t border-white/10">
+        <label class="block text-zinc-500 mb-1 text-[10px]">IMPORT GRAPH FILE (.JSON)</label>
+        <input id="file-import" type="file" accept=".json" class="block w-full text-[10px] text-zinc-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-zinc-800 file:text-zinc-200 cursor-pointer">
+      </div>
+    </div>
+  </aside>
+
+  <!-- ADD NODE MODAL -->
+  <div id="add-modal" class="fixed inset-0 z-40 bg-black/80 backdrop-blur-md flex items-center justify-center hidden pointer-events-auto">
+    <div class="stealth-glass w-96 rounded p-5 border border-white/15 shadow-2xl">
+      <h3 class="text-xs font-bold text-white mb-3 font-mono tracking-wider uppercase flex items-center gap-2">
+        <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+        DEPLOY INTEL NODE
+      </h3>
+      <div class="space-y-3 text-xs font-mono">
+        <div>
+          <label class="block text-zinc-400 mb-1">Node Identifier</label>
+          <input id="new-node-title" type="text" placeholder="e.g. Memory Scan Hook" class="w-full px-2.5 py-1.5 bg-zinc-950 border border-white/10 rounded text-white focus:outline-none focus:border-white/30">
+        </div>
+        <div>
+          <label class="block text-zinc-400 mb-1">Category / Cluster</label>
+          <select id="new-node-cat" class="w-full px-2.5 py-1.5 bg-zinc-950 border border-white/10 rounded text-white focus:outline-none focus:border-white/30">
+            <option value="Fundamentals">Fundamentals</option>
+            <option value="Bypass">Bypass</option>
+            <option value="UI Architecture">UI Architecture</option>
+            <option value="Game Automation">Game Automation</option>
+            <option value="Architecture">Architecture</option>
+            <option value="Tooling">Tooling</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-zinc-400 mb-1">Target Connection Link</label>
+          <select id="new-node-target" class="w-full px-2.5 py-1.5 bg-zinc-950 border border-white/10 rounded text-white focus:outline-none focus:border-white/30"></select>
+        </div>
+        <div>
+          <label class="block text-zinc-400 mb-1">Intel Technical Notes</label>
+          <textarea id="new-node-desc" rows="3" placeholder="Description of mechanics..." class="w-full px-2.5 py-1.5 bg-zinc-950 border border-white/10 rounded text-white focus:outline-none focus:border-white/30"></textarea>
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t border-white/10">
+          <button id="btn-cancel-modal" class="px-3 py-1.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-400 text-xs">CANCEL</button>
+          <button id="btn-save-new-node" class="px-3 py-1.5 rounded bg-white hover:bg-zinc-200 text-black font-bold text-xs">CONFIRM</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REAL MCP MONITOR MODAL -->
+  <div id="mcp-modal" class="fixed inset-0 z-40 bg-black/80 backdrop-blur-md flex items-center justify-center hidden pointer-events-auto">
+    <div class="stealth-glass w-[460px] rounded p-6 border border-white/15 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 mb-4 border-b border-white/10">
+        <div class="flex items-center gap-2.5">
+          <div class="w-7 h-7 rounded bg-zinc-900 border border-white/15 flex items-center justify-center text-emerald-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <div>
+            <h3 class="text-xs font-bold text-white font-mono uppercase tracking-wider">REAL MCP DIAGNOSTIC CORE</h3>
+            <p class="text-[10px] text-zinc-500 font-mono">TELEMETRY RELAY & EXECUTOR LINK</p>
+          </div>
+        </div>
+        <button id="btn-close-mcp-modal" class="text-zinc-500 hover:text-white transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="space-y-3 font-mono text-xs mb-5">
+        <div class="flex items-center justify-between p-2.5 rounded bg-zinc-950 border border-white/5">
+          <span class="text-zinc-400 text-[11px]">RELAY ENDPOINT</span>
+          <span class="text-white font-bold">127.0.0.1:3872</span>
+        </div>
+        <div class="flex items-center justify-between p-2.5 rounded bg-zinc-950 border border-white/5">
+          <span class="text-zinc-400 text-[11px]">CORE STATUS</span>
+          <span id="modal-mcp-state" class="px-2 py-0.5 rounded font-bold text-[10px] bg-amber-500/10 text-amber-300 border border-amber-500/20 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> LISTENING
+          </span>
+        </div>
+        <div class="flex items-center justify-between p-2.5 rounded bg-zinc-950 border border-white/5">
+          <span class="text-zinc-400 text-[11px]">ACTIVE CLIENTS</span>
+          <span id="modal-client-count" class="text-white font-bold">0 ACTIVE</span>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <div class="text-[10px] uppercase font-mono tracking-wider text-zinc-500 mb-2">ATTACHED CLIENT TELEMETRY</div>
+        <div id="modal-clients-list" class="space-y-1.5 max-h-36 overflow-y-auto">
+          <div class="p-3 text-center text-zinc-600 font-mono text-xs bg-zinc-950/60 rounded border border-white/5">
+            NO ROBLOX SESSIONS INJECTED
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-white/10 flex items-center justify-between text-xs font-mono">
+        <button id="btn-copy-connector" class="px-3 py-1.5 rounded bg-white hover:bg-zinc-200 text-black font-bold flex items-center gap-1.5 transition-all">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          <span id="copy-btn-text">COPY CONNECTOR</span>
+        </button>
+        <a href="http://localhost:16384/" target="_blank" class="px-3 py-1.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 font-semibold flex items-center justify-center gap-1.5 border border-white/10 transition-all">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          DASHBOARD
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3D Graph Logic Script -->
+  <script>
+    // Embedded Graph Data
+    let graphData = {"nodes": [{"id": "lua-core", "name": "Luau Core Language", "category": "Fundamentals", "val": 30, "desc": "Luau ภาษาหลักของ Roblox — Types, Metatables, Closures, Coroutines, pcall/xpcall error handling"}, {"id": "executor-api", "name": "Executor API", "category": "Fundamentals", "val": 26, "desc": "getgenv, getrenv, getrawmetatable, hookmetamethod, newcclosure, getconnections, getscriptbytecode, filtergc"}, {"id": "services", "name": "Roblox Services", "category": "Fundamentals", "val": 20, "desc": "Players, RunService, TweenService, UserInputService, ReplicatedStorage, CoreGui, HttpService, VirtualUser"}, {"id": "task-library", "name": "Task Library & Threading", "category": "Fundamentals", "val": 18, "desc": "task.spawn, task.defer, task.wait, task.delay, task.cancel — non-blocking coroutine management"}, {"id": "stealth", "name": "Stealth & Anti-Kick", "category": "Bypass", "val": 28, "desc": "hookmetamethod __namecall Kick intercept, getconnections Kicked:Disable(), newcclosure wrapping"}, {"id": "anti-afk", "name": "Anti-AFK Engine", "category": "Bypass", "val": 16, "desc": "VirtualUser:CaptureController + ClickButton2 on Idled event — เลี่ยง Idle Kick"}, {"id": "anti-cheat-bypass", "name": "Anti-Cheat Detection Bypass", "category": "Bypass", "val": 22, "desc": "Speed/CFrame เปลี่ยนผ่าน Heartbeat, Humanoid manipulation via pcall, Remote throttle guard"}, {"id": "remote-spy", "name": "Remote Spy & Interception", "category": "Bypass", "val": 20, "desc": "hookfunction FireServer/InvokeServer, ดัก Arguments ของ Remote Events/Functions ขาออก-ขาเข้า"}, {"id": "ui-cyber-neon", "name": "2K Cyber-Neon UI", "category": "UI Architecture", "val": 30, "desc": "Obsidian Navy + Electric Cyan palette, GothamBold สองภาษา, UIStroke + UIGradient glow, Zero Emojis"}, {"id": "fluent-ui", "name": "Fluent UI (Acrylic)", "category": "UI Architecture", "val": 18, "desc": "Fluent UI library — Theme Aqua, DarkMode, Acrylic glassmorphism, named '2K Script'"}, {"id": "floating-btn", "name": "Floating Toggle Button", "category": "UI Architecture", "val": 16, "desc": "วงกลมลอยน้ำ + ขอบแสงหมุน UIGradient + UIStroke ด้วย TweenService ต่อเนื่อง + Drag/Click separation"}, {"id": "drag-click", "name": "Drag vs Click Separation", "category": "UI Architecture", "val": 14, "desc": "(currentPos - clickStart).Magnitude < 6px = click, มากกว่า = drag — ป้องกัน toggle กะพริบตอนลากหน้าต่าง"}, {"id": "ui-teardown", "name": "UI Teardown Pattern", "category": "UI Architecture", "val": 16, "desc": "ก่อนสร้าง UI ใหม่ต้อง Destroy CoreGui + PlayerGui instance เก่า + Disconnect events + Cancel threads"}, {"id": "tween-system", "name": "TweenService Animation", "category": "UI Architecture", "val": 14, "desc": "TweenInfo Quart/Back/Linear, tween helper wrapper, อนิเมชั่น Toggle slide, Window open/close scale"}, {"id": "auto-farm", "name": "Auto Farm Engine", "category": "Game Automation", "val": 28, "desc": "Flag-based loop ด้วย task.spawn, Heartbeat binding, Proximity check ก่อน interact, Item/Mob farming loop"}, {"id": "auto-parry", "name": "Auto Parry System", "category": "Game Automation", "val": 24, "desc": "Time-to-Impact ด้วย Dot Product + Distance/Speed, Ping offset compensation, Heartbeat polling"}, {"id": "esp", "name": "ESP & Wallhack", "category": "Game Automation", "val": 20, "desc": "BillboardGui บน Character, WorldToViewportPoint visibility check, Health/Name/Distance overlay"}, {"id": "aimbot", "name": "Aimbot & Silent Aim", "category": "Game Automation", "val": 22, "desc": "hookfunction FindPartOnRayWithWhitelist/WorldRoot, closest-player targeting, FOV circle filter"}, {"id": "speed-fly", "name": "Speed & Fly Hacks", "category": "Game Automation", "val": 18, "desc": "Humanoid.WalkSpeed/JumpPower override, BodyVelocity fly via Heartbeat, NoClip via Stepped loop"}, {"id": "remote-fire", "name": "Remote Manipulation", "category": "Game Automation", "val": 22, "desc": "FireServer/InvokeServer ด้วย validated args, ตรวจสอบ Coins/Cooldown/Distance ก่อนยิง Remote ทุกครั้ง"}, {"id": "connection-maid", "name": "Connection Maid Pattern", "category": "Architecture", "val": 20, "desc": "เก็บ RBXScriptConnection ใน table, Cleanup loop ด้วย :Disconnect(), task.cancel threads เมื่อ Toggle off"}, {"id": "getgenv-flags", "name": "getgenv() Flag System", "category": "Architecture", "val": 16, "desc": "ใช้ getgenv().flags เก็บสถานะ global เพื่อให้ re-run สคริปต์ได้โดยไม่ซ้อน instance"}, {"id": "single-file", "name": "Single-File Self-Contained", "category": "Architecture", "val": 18, "desc": "ฝัง Base64 Logo, Library, Logic ไว้ในไฟล์เดียว รันผ่าน Executor ได้ทันทีไม่พึ่งไฟล์แยก"}, {"id": "pcall-safety", "name": "pcall Safety Wrapper", "category": "Architecture", "val": 14, "desc": "ครอบทุก API ที่อาจ Error ด้วย pcall — hookmetamethod, GetUserThumbnail, HttpGet, WaitForChild"}, {"id": "mcp-executor", "name": "MCP Executor Bridge", "category": "Tooling", "val": 22, "desc": "roblox-executor-mcp: execute, get-data-by-code, get-console-output, search-instances, remote-spy"}, {"id": "loader", "name": "Loader & Script Dispatch", "category": "Tooling", "val": 18, "desc": "PlaceId routing, cachebust ?t= param, fast pre-routed dispatch, loadstring() execution pipeline"}, {"id": "bytecode", "name": "Bytecode & Decompile", "category": "Tooling", "val": 16, "desc": "getscriptbytecode → POST to decompiler endpoint, base64 encoding payload, reconstruct source"}, {"id": "base64", "name": "Base64 Encode/Decode", "category": "Tooling", "val": 12, "desc": "Inline base64 library สำหรับฝัง PNG Logo และ encode bytecode payload ส่งผ่าน HTTP"}, {"id": "real-mcp", "name": "Real MCP Executor", "category": "Tooling", "val": 32, "desc": "Primary AI Executor — 60+ tools: decompile in-memory, gc-scan, fire-remote, remote-spy, dump-anticheat-hooks, live-reload"}, {"id": "dumper-tool", "name": "Dumper (vita8it)", "category": "Tooling", "val": 24, "desc": "Instance Tree & Script Extractor — Dump Explorer, ReplicatedStorage Remotes, Local/Module Scripts to disk"}], "links": [{"source": "lua-core", "target": "executor-api"}, {"source": "lua-core", "target": "task-library"}, {"source": "lua-core", "target": "pcall-safety"}, {"source": "lua-core", "target": "services"}, {"source": "executor-api", "target": "stealth"}, {"source": "executor-api", "target": "remote-spy"}, {"source": "executor-api", "target": "bytecode"}, {"source": "executor-api", "target": "aimbot"}, {"source": "services", "target": "ui-cyber-neon"}, {"source": "services", "target": "auto-farm"}, {"source": "services", "target": "esp"}, {"source": "services", "target": "anti-afk"}, {"source": "task-library", "target": "auto-farm"}, {"source": "task-library", "target": "auto-parry"}, {"source": "task-library", "target": "connection-maid"}, {"source": "stealth", "target": "anti-kick"}, {"source": "stealth", "target": "anti-cheat-bypass"}, {"source": "stealth", "target": "remote-spy"}, {"source": "anti-afk", "target": "stealth"}, {"source": "anti-cheat-bypass", "target": "speed-fly"}, {"source": "anti-cheat-bypass", "target": "aimbot"}, {"source": "remote-spy", "target": "remote-fire"}, {"source": "ui-cyber-neon", "target": "floating-btn"}, {"source": "ui-cyber-neon", "target": "tween-system"}, {"source": "ui-cyber-neon", "target": "ui-teardown"}, {"source": "fluent-ui", "target": "ui-cyber-neon"}, {"source": "floating-btn", "target": "drag-click"}, {"source": "floating-btn", "target": "tween-system"}, {"source": "ui-teardown", "target": "connection-maid"}, {"source": "ui-teardown", "target": "getgenv-flags"}, {"source": "auto-farm", "target": "remote-fire"}, {"source": "auto-farm", "target": "connection-maid"}, {"source": "auto-parry", "target": "esp"}, {"source": "aimbot", "target": "esp"}, {"source": "aimbot", "target": "auto-parry"}, {"source": "speed-fly", "target": "auto-farm"}, {"source": "remote-fire", "target": "pcall-safety"}, {"source": "connection-maid", "target": "getgenv-flags"}, {"source": "single-file", "target": "base64"}, {"source": "single-file", "target": "loader"}, {"source": "single-file", "target": "ui-cyber-neon"}, {"source": "mcp-executor", "target": "loader"}, {"source": "mcp-executor", "target": "remote-spy"}, {"source": "loader", "target": "bytecode"}, {"source": "base64", "target": "bytecode"}, {"source": "getgenv-flags", "target": "single-file"}, {"source": "real-mcp", "target": "mcp-executor"}, {"source": "real-mcp", "target": "remote-spy"}, {"source": "real-mcp", "target": "bytecode"}, {"source": "real-mcp", "target": "stealth"}, {"source": "real-mcp", "target": "auto-farm"}, {"source": "real-mcp", "target": "dumper-tool"}, {"source": "dumper-tool", "target": "bytecode"}, {"source": "dumper-tool", "target": "remote-fire"}, {"source": "dumper-tool", "target": "services"}]};
+
+    // Monochrome Stealth Palette
+    const CATEGORY_COLORS = {
+      "Fundamentals":    0xb0b8c4,  // Platinum
+      "Bypass":          0x828a9c,  // Graphite Slate
+      "UI Architecture": 0x98a0b4,  // Titanium
+      "Game Automation": 0xd8dde8,  // Silver
+      "Architecture":    0x6b7285,  // Carbon
+      "Tooling":         0xffffff   // Pure White
+    };
+
+    const CATEGORY_HEX = {
+      "Fundamentals":    "#b0b8c4",
+      "Bypass":          "#828a9c",
+      "UI Architecture": "#98a0b4",
+      "Game Automation": "#d8dde8",
+      "Architecture":    "#6b7285",
+      "Tooling":         "#ffffff"
+    };
+
+    // Active Laser Pulse Highlight Color (Only triggered on event or select)
+    const EVENT_LASER_COLOR = 0x00ff88;
+    const EVENT_LASER_HEX = "#00ff88";
+
+    // Three.js State
+    let scene, camera, renderer, controls;
+    let nodeMeshes = [];
+    let linkLines = [];
+    let labelSprites = [];
+    let photonParticles = [];
+    let activeFilter = "ALL";
+    let selectedNode = null;
+    let autoRotate = true;
+    let showLabels = true;
+    let showPhotons = true;
+
+    // Simulation params
+    let repulsionForce = 150;
+    let linkDistance = 60;
+    let nodeScaleMultiplier = 1.0;
+
+    const canvasContainer = document.getElementById("webgl-canvas");
+
+    // Initialize Scene
+    function initThree() {
+      scene = new THREE.Scene();
+
+      camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 3000);
+      camera.position.set(0, 45, 300);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.1;
+      canvasContainer.appendChild(renderer.domElement);
+
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.06;
+      controls.rotateSpeed = 0.7;
+      controls.zoomSpeed = 1.0;
+      controls.minDistance = 30;
+      controls.maxDistance = 800;
+
+      // Stealth Lighting
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+      scene.add(ambientLight);
+
+      const dirLight1 = new THREE.DirectionalLight(0xffffff, 1.4);
+      dirLight1.position.set(200, 300, 200);
+      scene.add(dirLight1);
+
+      const dirLight2 = new THREE.DirectionalLight(0x9aa2b5, 0.9);
+      dirLight2.position.set(-200, -200, -200);
+      scene.add(dirLight2);
+
+      // Tactical Radar Grid Floor
+      const grid = new THREE.GridHelper(900, 36, 0x1f2430, 0x0c0e14);
+      grid.position.y = -160;
+      scene.add(grid);
+
+      // Starfield Dust Particles
+      const starGeo = new THREE.BufferGeometry();
+      const starCount = 500;
+      const positions = new Float32Array(starCount * 3);
+      for(let i=0; i<starCount*3; i+=3) {
+        positions[i] = (Math.random() - 0.5) * 1600;
+        positions[i+1] = (Math.random() - 0.5) * 1600;
+        positions[i+2] = (Math.random() - 0.5) * 1600;
+      }
+      starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const starMat = new THREE.PointsMaterial({
+        color: 0x545b6e,
+        size: 1.2,
+        transparent: true,
+        opacity: 0.35
+      });
+      scene.add(new THREE.Points(starGeo, starMat));
+
+      // Build Graph
+      rebuildGraph();
+      renderCategoryPills();
+
+      // Window resize
+      window.addEventListener('resize', onWindowResize);
+
+      // Raycasting for Clicks & Hovers
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2();
+
+      window.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('header, footer, aside, .stealth-glass, button, input, select, textarea')) return;
+
+        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(nodeMeshes.map(n => n.mesh));
+
+        if (intersects.length > 0) {
+          const hit = intersects[0].object;
+          selectNode(hit.userData.node);
+        } else {
+          deselectNode();
+        }
+      });
+    }
+
+    // Text Label Sprite Generator (Crisp High-DPI Billboard, Monospace)
+    function createTextSprite(text, colorHex) {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 512;
+      canvas.height = 100;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.font = '700 24px "JetBrains Mono", monospace';
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = colorHex || '#ffffff';
+      ctx.shadowBlur = 6;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text.toUpperCase(), 256, 50);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.minFilter = THREE.LinearFilter;
+      const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true, opacity: 0.95 });
+      const sprite = new THREE.Sprite(spriteMat);
+      sprite.scale.set(28, 5.5, 1);
+      return sprite;
+    }
+
+    // Rebuild 3D Meshes from Data (Faceted Stealth Crystals)
+    function rebuildGraph() {
+      nodeMeshes.forEach(n => {
+        scene.remove(n.mesh);
+        if (n.cage) scene.remove(n.cage);
+        if (n.sprite) scene.remove(n.sprite);
+      });
+      linkLines.forEach(l => scene.remove(l.line));
+      photonParticles.forEach(p => scene.remove(p.mesh));
+
+      nodeMeshes = [];
+      linkLines = [];
+      labelSprites = [];
+      photonParticles = [];
+
+      document.getElementById('stat-nodes').innerText = graphData.nodes.length;
+      document.getElementById('stat-links').innerText = graphData.links.length;
+
+      const count = graphData.nodes.length;
+      const phi = Math.PI * (3 - Math.sqrt(5));
+
+      graphData.nodes.forEach((node, i) => {
+        const y = 1 - (i / (count - 1)) * 2;
+        const radius = Math.sqrt(Math.max(0, 1 - y * y));
+        const theta = phi * i;
+
+        const sphereRadius = 110;
+        node.x = Math.cos(theta) * radius * sphereRadius + (Math.random() - 0.5) * 16;
+        node.y = y * sphereRadius + (Math.random() - 0.5) * 16;
+        node.z = Math.sin(theta) * radius * sphereRadius + (Math.random() - 0.5) * 16;
+
+        node.vx = 0;
+        node.vy = 0;
+        node.vz = 0;
+
+        const color = CATEGORY_COLORS[node.category] || 0xb0b8c4;
+        const colorHex = CATEGORY_HEX[node.category] || "#b0b8c4";
+
+        const nodeSize = Math.max(3.8, (node.val || 16) * 0.28) * nodeScaleMultiplier;
+        
+        // Stealth Faceted Crystal Core (Icosahedron + Flat Shading)
+        const crystalGeo = new THREE.IcosahedronGeometry(nodeSize, 0);
+        const crystalMat = new THREE.MeshStandardMaterial({
+          color: color,
+          emissive: color,
+          emissiveIntensity: 0.35,
+          roughness: 0.2,
+          metalness: 0.8,
+          flatShading: true
+        });
+        const mesh = new THREE.Mesh(crystalGeo, crystalMat);
+        mesh.position.set(node.x, node.y, node.z);
+        mesh.userData = { node: node };
+        scene.add(mesh);
+
+        // Stealth Wireframe Outer Cage
+        const cageGeo = new THREE.IcosahedronGeometry(nodeSize * 1.38, 1);
+        const cageMat = new THREE.MeshBasicMaterial({
+          color: color,
+          transparent: true,
+          opacity: 0.25,
+          wireframe: true
+        });
+        const cage = new THREE.Mesh(cageGeo, cageMat);
+        cage.position.copy(mesh.position);
+        scene.add(cage);
+
+        // Billboard Text Label
+        const sprite = createTextSprite(node.name, colorHex);
+        sprite.position.set(node.x, node.y + nodeSize + 4.5, node.z);
+        sprite.visible = showLabels;
+        scene.add(sprite);
+
+        nodeMeshes.push({
+          node: node,
+          mesh: mesh,
+          cage: cage,
+          sprite: sprite,
+          baseSize: nodeSize,
+          baseColor: color
+        });
+      });
+
+      // Build Link Lines (Razor-thin Titanium Filaments)
+      const lineMaterial = new THREE.LineBasicMaterial({
+        color: 0x485064,
+        transparent: true,
+        opacity: 0.35
+      });
+
+      graphData.links.forEach(link => {
+        const srcNode = graphData.nodes.find(n => n.id === link.source || n.id === link.source.id);
+        const tgtNode = graphData.nodes.find(n => n.id === link.target || n.id === link.target.id);
+
+        if (srcNode && tgtNode) {
+          const geom = new THREE.BufferGeometry().setFromPoints([
+            new THREE.Vector3(srcNode.x, srcNode.y, srcNode.z),
+            new THREE.Vector3(tgtNode.x, tgtNode.y, tgtNode.z)
+          ]);
+          const line = new THREE.Line(geom, lineMaterial.clone());
+          scene.add(line);
+          linkLines.push({ link, line, srcNode, tgtNode });
+
+          // Monochromatic High-speed Laser Photons
+          const photonGeo = new THREE.SphereGeometry(0.9, 8, 8);
+          const photonMat = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.85
+          });
+          const photon = new THREE.Mesh(photonGeo, photonMat);
+          photon.visible = showPhotons;
+          scene.add(photon);
+
+          photonParticles.push({
+            mesh: photon,
+            src: srcNode,
+            tgt: tgtNode,
+            progress: Math.random()
+          });
+        }
+      });
+    }
+
+    // Render Bottom Category Filter Pills
+    function renderCategoryPills() {
+      const container = document.getElementById("category-pills");
+      container.innerHTML = "";
+
+      const cats = ["ALL", ...new Set(graphData.nodes.map(n => n.category))];
+
+      cats.forEach(cat => {
+        const pill = document.createElement("button");
+        pill.className = `px-2.5 py-1 rounded text-[10px] font-mono tracking-wider transition-all ${
+          activeFilter === cat 
+            ? "bg-white text-black font-bold shadow-lg" 
+            : "text-zinc-400 hover:text-white hover:bg-zinc-800"
+        }`;
+        pill.innerText = cat === "ALL" ? "[ ALL ]" : `[ ${cat.toUpperCase()} ]`;
+
+        pill.onclick = () => {
+          activeFilter = cat;
+          renderCategoryPills();
+          applyFilter(cat);
+        };
+
+        container.appendChild(pill);
+      });
+    }
+
+    function applyFilter(cat) {
+      nodeMeshes.forEach(nm => {
+        const isMatch = (cat === "ALL" || nm.node.category === cat);
+        nm.mesh.visible = isMatch;
+        if (nm.cage) nm.cage.visible = isMatch;
+        if (nm.sprite) nm.sprite.visible = isMatch && showLabels;
+      });
+
+      linkLines.forEach(ll => {
+        const isMatch = (cat === "ALL") || 
+          (ll.srcNode.category === cat && ll.tgtNode.category === cat);
+        ll.line.visible = isMatch;
+      });
+
+      photonParticles.forEach(p => {
+        const isMatch = (cat === "ALL") || 
+          (p.src.category === cat && p.tgt.category === cat);
+        p.mesh.visible = isMatch && showPhotons;
+      });
+    }
+
+    // Node Selection & Focus (Laser Highlight Event)
+    function selectNode(node) {
+      selectedNode = node;
+
+      // Camera Fly-to Target
+      new TWEEN.Tween(camera.position)
+        .to({ x: node.x + 35, y: node.y + 20, z: node.z + 65 }, 900)
+        .easing(TWEEN.Easing.Cubic.Out)
+        .start();
+
+      new TWEEN.Tween(controls.target)
+        .to({ x: node.x, y: node.y, z: node.z }, 900)
+        .easing(TWEEN.Easing.Cubic.Out)
+        .start();
+
+      // Highlight connections and apply laser accent
+      nodeMeshes.forEach(nm => {
+        if (nm.node.id === node.id) {
+          nm.mesh.material.color.setHex(EVENT_LASER_COLOR);
+          nm.mesh.material.emissive.setHex(EVENT_LASER_COLOR);
+          nm.mesh.material.emissiveIntensity = 0.9;
+          if (nm.cage) {
+            nm.cage.material.color.setHex(EVENT_LASER_COLOR);
+            nm.cage.material.opacity = 0.75;
+          }
+          nm.mesh.scale.set(1.4, 1.4, 1.4);
+        } else {
+          nm.mesh.material.color.setHex(0x353a48);
+          nm.mesh.material.emissive.setHex(0x10141e);
+          nm.mesh.material.emissiveIntensity = 0.15;
+          if (nm.cage) nm.cage.material.opacity = 0.05;
+          nm.mesh.scale.set(0.9, 0.9, 0.9);
+        }
+      });
+
+      linkLines.forEach(ll => {
+        if (ll.srcNode.id === node.id || ll.tgtNode.id === node.id) {
+          ll.line.material.color.setHex(EVENT_LASER_COLOR);
+          ll.line.material.opacity = 0.8;
+        } else {
+          ll.line.material.color.setHex(0x181a24);
+          ll.line.material.opacity = 0.08;
+        }
+      });
+
+      // Show Tactical Drawer
+      const drawer = document.getElementById("node-drawer");
+      drawer.classList.remove("hidden");
+
+      document.getElementById("drawer-title").innerText = node.name.toUpperCase();
+      document.getElementById("drawer-cluster-tag").innerText = node.category.toUpperCase();
+      document.getElementById("drawer-desc").innerText = node.desc || "Technical specification locked.";
+      document.getElementById("drawer-val").innerText = (node.val || 16) + " pt";
+
+      const linkedNodes = graphData.links
+        .filter(l => (l.source === node.id || l.source.id === node.id || l.target === node.id || l.target.id === node.id))
+        .map(l => (l.source === node.id || l.source.id === node.id) ? (l.target.id || l.target) : (l.source.id || l.source));
+
+      document.getElementById("drawer-connections-count").innerText = linkedNodes.length + " Links";
+
+      const tagsContainer = document.getElementById("drawer-links");
+      tagsContainer.innerHTML = "";
+      linkedNodes.forEach(lid => {
+        const targetObj = graphData.nodes.find(n => n.id === lid);
+        if (targetObj) {
+          const tag = document.createElement("span");
+          tag.className = "px-2 py-0.5 rounded text-[10px] font-mono bg-zinc-900 border border-white/10 text-zinc-300 cursor-pointer hover:border-white/30";
+          tag.innerText = targetObj.name.toUpperCase();
+          tag.onclick = () => selectNode(targetObj);
+          tagsContainer.appendChild(tag);
+        }
+      });
+    }
+
+    function deselectNode() {
+      if (!selectedNode) return;
+      selectedNode = null;
+
+      document.getElementById("node-drawer").classList.add("hidden");
+
+      nodeMeshes.forEach(nm => {
+        nm.mesh.material.color.setHex(nm.baseColor);
+        nm.mesh.material.emissive.setHex(nm.baseColor);
+        nm.mesh.material.emissiveIntensity = 0.35;
+        if (nm.cage) {
+          nm.cage.material.color.setHex(nm.baseColor);
+          nm.cage.material.opacity = 0.25;
+        }
+        nm.mesh.scale.set(1.0, 1.0, 1.0);
+      });
+
+      linkLines.forEach(ll => {
+        ll.line.material.color.setHex(0x485064);
+        ll.line.material.opacity = 0.35;
+      });
+    }
+
+    // Stable Spring-Embedder Physics Simulation
+    function stepForceSimulation() {
+      const nodes = graphData.nodes;
+      const k = 0.035;
+      const repulsion = repulsionForce;
+      const centerGravity = 0.0006;
+
+      // 1. Repulsion between all node pairs
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const a = nodes[i];
+          const b = nodes[j];
+          let dx = b.x - a.x;
+          let dy = b.y - a.y;
+          let dz = b.z - a.z;
+          let distSq = dx * dx + dy * dy + dz * dz + 1.0;
+          let dist = Math.sqrt(distSq);
+
+          if (dist < 220) {
+            let force = (repulsion / distSq) * 1.5;
+            let fx = (dx / dist) * force;
+            let fy = (dy / dist) * force;
+            let fz = (dz / dist) * force;
+
+            a.vx -= fx;
+            a.vy -= fy;
+            a.vz -= fz;
+            b.vx += fx;
+            b.vy += fy;
+            b.vz += fz;
+          }
+        }
+      }
+
+      // 2. Attraction along links
+      graphData.links.forEach(l => {
+        const a = graphData.nodes.find(n => n.id === l.source || n.id === l.source.id);
+        const b = graphData.nodes.find(n => n.id === l.target || n.id === l.target.id);
+        if (a && b) {
+          let dx = b.x - a.x;
+          let dy = b.y - a.y;
+          let dz = b.z - a.z;
+          let dist = Math.sqrt(dx * dx + dy * dy + dz * dz) + 0.1;
+          let delta = dist - linkDistance;
+          let force = delta * k;
+
+          let fx = (dx / dist) * force;
+          let fy = (dy / dist) * force;
+          let fz = (dz / dist) * force;
+
+          a.vx += fx;
+          a.vy += fy;
+          a.vz += fz;
+          b.vx -= fx;
+          b.vy -= fy;
+          b.vz -= fz;
+        }
+      });
+
+      // 3. Center Gravity & Velocity integration
+      nodes.forEach(n => {
+        n.vx -= n.x * centerGravity;
+        n.vy -= n.y * centerGravity;
+        n.vz -= n.z * centerGravity;
+
+        // Damping
+        n.vx *= 0.88;
+        n.vy *= 0.88;
+        n.vz *= 0.88;
+
+        n.x += n.vx;
+        n.y += n.vy;
+        n.z += n.vz;
+      });
+
+      // Update Mesh positions
+      nodeMeshes.forEach(nm => {
+        nm.mesh.position.set(nm.node.x, nm.node.y, nm.node.z);
+        if (nm.cage) nm.cage.position.copy(nm.mesh.position);
+        if (nm.sprite) nm.sprite.position.set(nm.node.x, nm.node.y + nm.baseSize + 4.5, nm.node.z);
+      });
+
+      // Update Line geometries
+      linkLines.forEach(ll => {
+        const pos = ll.line.geometry.attributes.position;
+        pos.setXYZ(0, ll.srcNode.x, ll.srcNode.y, ll.srcNode.z);
+        pos.setXYZ(1, ll.tgtNode.x, ll.tgtNode.y, ll.tgtNode.z);
+        pos.needsUpdate = true;
+      });
+
+      // Update Photons
+      if (showPhotons) {
+        photonParticles.forEach(p => {
+          p.progress = (p.progress + 0.007) % 1.0;
+          p.mesh.position.lerpVectors(
+            new THREE.Vector3(p.src.x, p.src.y, p.src.z),
+            new THREE.Vector3(p.tgt.x, p.tgt.y, p.tgt.z),
+            p.progress
+          );
+          p.mesh.visible = true;
+        });
+      }
+    }
+
+    // UI Event Handlers
+    document.getElementById("btn-toggle-autorotate").onclick = () => {
+      autoRotate = !autoRotate;
+      document.getElementById("rotate-label").innerText = autoRotate ? "ORBIT: ON" : "ORBIT: OFF";
+    };
+
+    document.getElementById("btn-reset-cam").onclick = () => {
+      new TWEEN.Tween(camera.position).to({ x: 0, y: 45, z: 300 }, 800).easing(TWEEN.Easing.Cubic.Out).start();
+      new TWEEN.Tween(controls.target).to({ x: 0, y: 0, z: 0 }, 800).easing(TWEEN.Easing.Cubic.Out).start();
+      deselectNode();
+    };
+
+    document.getElementById("drawer-close").onclick = deselectNode;
+    document.getElementById("drawer-focus-btn").onclick = () => {
+      if (selectedNode) selectNode(selectedNode);
+    };
+
+    // Settings Modal
+    const settingsPanel = document.getElementById("settings-panel");
+    document.getElementById("btn-open-settings").onclick = () => {
+      settingsPanel.classList.toggle("hidden");
+    };
+    document.getElementById("settings-close").onclick = () => {
+      settingsPanel.classList.add("hidden");
+    };
+
+    document.getElementById("slider-repulsion").oninput = (e) => {
+      repulsionForce = parseFloat(e.target.value);
+      document.getElementById("val-repulsion").innerText = repulsionForce;
+    };
+    document.getElementById("slider-distance").oninput = (e) => {
+      linkDistance = parseFloat(e.target.value);
+      document.getElementById("val-distance").innerText = linkDistance;
+    };
+    document.getElementById("check-labels").onchange = (e) => {
+      showLabels = e.target.checked;
+      nodeMeshes.forEach(nm => { if (nm.sprite) nm.sprite.visible = showLabels; });
+    };
+    document.getElementById("check-photons").onchange = (e) => {
+      showPhotons = e.target.checked;
+      photonParticles.forEach(p => { p.mesh.visible = showPhotons; });
+    };
+
+    // Search Input
+    const searchInput = document.getElementById("search-input");
+    const searchResults = document.getElementById("search-results");
+
+    searchInput.oninput = (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      if (!query) {
+        searchResults.classList.add("hidden");
+        return;
+      }
+      const matches = graphData.nodes.filter(n => 
+        n.name.toLowerCase().includes(query) || (n.desc && n.desc.toLowerCase().includes(query))
+      );
+
+      if (matches.length === 0) {
+        searchResults.innerHTML = `<div class="p-2 text-zinc-500 font-mono text-[11px]">NO INTEL FOUND</div>`;
+        searchResults.classList.remove("hidden");
+        return;
+      }
+
+      searchResults.innerHTML = matches.map(m => `
+        <div class="p-2 rounded hover:bg-zinc-800 cursor-pointer flex items-center justify-between text-xs font-mono" data-id="${m.id}">
+          <span class="text-white">${m.name.toUpperCase()}</span>
+          <span class="text-[9px] text-zinc-500">[${m.category.toUpperCase()}]</span>
+        </div>
+      `).join("");
+      searchResults.classList.remove("hidden");
+
+      searchResults.querySelectorAll("div[data-id]").forEach(el => {
+        el.onclick = () => {
+          const target = graphData.nodes.find(n => n.id === el.dataset.id);
+          if (target) selectNode(target);
+          searchResults.classList.add("hidden");
+          searchInput.value = "";
+        };
+      });
+    };
+
+    // Add Node Dialog
+    const addModal = document.getElementById("add-modal");
+    document.getElementById("btn-add-node").onclick = () => {
+      const targetSelect = document.getElementById("new-node-target");
+      targetSelect.innerHTML = graphData.nodes.map(n => `<option value="${n.id}">${n.name}</option>`).join("");
+      addModal.classList.remove("hidden");
+    };
+    document.getElementById("btn-cancel-modal").onclick = () => {
+      addModal.classList.add("hidden");
+    };
+    document.getElementById("btn-save-new-node").onclick = () => {
+      const title = document.getElementById("new-node-title").value.trim();
+      const cat = document.getElementById("new-node-cat").value;
+      const targetId = document.getElementById("new-node-target").value;
+      const desc = document.getElementById("new-node-desc").value.trim();
+
+      if (!title) return;
+
+      const newId = title.toLowerCase().replace(/[^a-z0-9]/g, "-");
+      const newNode = {
+        id: newId,
+        name: title,
+        category: cat,
+        val: 18,
+        desc: desc || "Deployed via tactical console."
+      };
+
+      graphData.nodes.push(newNode);
+      graphData.links.push({ source: newId, target: targetId });
+
+      rebuildGraph();
+      renderCategoryPills();
+      addModal.classList.add("hidden");
+      selectNode(newNode);
+    };
+
+    // JSON File Import
+    document.getElementById("file-import").onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const imported = JSON.parse(event.target.result);
+          if (imported.nodes && imported.links) {
+            graphData = imported;
+            rebuildGraph();
+            renderCategoryPills();
+          }
+        } catch(err) {
+          alert("Corrupted JSON data.");
+        }
+      };
+      reader.readAsText(file);
+    };
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    // Animation Loop
+    function animate(time) {
+      requestAnimationFrame(animate);
+
+      TWEEN.update();
+      stepForceSimulation();
+
+      if (autoRotate && !selectedNode) {
+        scene.rotation.y += 0.0012;
+      }
+
+      // Subtle Stealth Cage Rotation
+      nodeMeshes.forEach(nm => {
+        if (nm.cage) {
+          nm.cage.rotation.x += 0.006;
+          nm.cage.rotation.y += 0.008;
+        }
+      });
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    // ==========================================
+    // REAL MCP LIVE MONITOR & POLLING SYSTEM
+    // ==========================================
+    let mcpConnected = false;
+    let mcpClients = [];
+
+    const mcpBadge = document.getElementById("mcp-live-badge");
+    const mcpModal = document.getElementById("mcp-modal");
+    const btnCloseMcp = document.getElementById("btn-close-mcp-modal");
+    const mcpStatusDot = document.getElementById("mcp-status-dot");
+    const mcpPingDot = document.getElementById("mcp-ping-dot");
+    const mcpStatusText = document.getElementById("mcp-status-text");
+    const mcpCountTag = document.getElementById("mcp-client-count-tag");
+    const modalMcpState = document.getElementById("modal-mcp-state");
+    const modalClientCount = document.getElementById("modal-client-count");
+    const modalClientsList = document.getElementById("modal-clients-list");
+    const btnCopyConnector = document.getElementById("btn-copy-connector");
+    const copyBtnText = document.getElementById("copy-btn-text");
+
+    if (mcpBadge && mcpModal) {
+      mcpBadge.onclick = () => {
+        mcpModal.classList.remove("hidden");
+        pollMcpStatus();
+      };
+
+      if (btnCloseMcp) {
+        btnCloseMcp.onclick = () => {
+          mcpModal.classList.add("hidden");
+        };
+      }
+
+      mcpModal.onclick = (e) => {
+        if (e.target === mcpModal) mcpModal.classList.add("hidden");
+      };
+    }
+
+    if (btnCopyConnector) {
+      btnCopyConnector.onclick = () => {
+        const code = `while not getgenv().MCP_Loaded do\n    local bridgeUrl = getgenv().BridgeURL or "127.0.0.1:16384"\n    pcall(function() loadstring(game:HttpGet("http://" .. bridgeUrl .. "/script.luau"))() end)\n    task.wait(0.15)\nend`;
+        navigator.clipboard.writeText(code).then(() => {
+          if (copyBtnText) copyBtnText.innerText = "COPIED TO CLIPBOARD";
+          setTimeout(() => { if (copyBtnText) copyBtnText.innerText = "COPY CONNECTOR"; }, 2000);
+        });
+      };
+    }
+
+    async function pollMcpStatus() {
+      try {
+        const res = await fetch("/api/mcp-status");
+        if (!res.ok) throw new Error("HTTP error " + res.status);
+        const data = await res.json();
+        
+        const realOnline = data.real && data.real.online;
+        const bridgeConnected = data.bridge && (data.bridge.connected || data.bridge.clientCount > 0);
+        mcpConnected = realOnline || bridgeConnected;
+        mcpClients = (data.bridge && data.bridge.clients) || [];
+        const count = realOnline ? (mcpClients.length || 1) : mcpClients.length;
+
+        if (mcpCountTag) mcpCountTag.innerText = count;
+
+        if (mcpConnected) {
+          if (mcpStatusDot) mcpStatusDot.className = "relative inline-flex rounded-full h-2 w-2 bg-emerald-400";
+          if (mcpPingDot) mcpPingDot.classList.remove("hidden");
+          if (mcpStatusText) {
+            mcpStatusText.innerText = realOnline ? "REAL: ATTACHED" : `CLIENTS: ${count}`;
+            mcpStatusText.className = "text-[10px] font-mono text-emerald-400 leading-tight";
+          }
+          if (mcpBadge) {
+            mcpBadge.classList.add("stealth-border-active");
+            mcpBadge.classList.remove("border-white/10");
+          }
+
+          if (modalMcpState) {
+            modalMcpState.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> ${realOnline ? "REAL_MCP ACTIVE" : "ONLINE"}`;
+            modalMcpState.className = "px-2 py-0.5 rounded font-bold text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5";
+          }
+          if (modalClientCount) modalClientCount.innerText = realOnline ? "1 INJECTED CLIENT (REAL)" : `${count} ACTIVE`;
+
+          if (modalClientsList) {
+            if (mcpClients.length > 0) {
+              modalClientsList.innerHTML = mcpClients.map(c => `
+                <div class="p-2.5 rounded bg-zinc-950 border border-emerald-500/20 flex items-center justify-between text-xs">
+                  <div>
+                    <div class="font-bold text-white font-mono">${c.name || 'ROBLOX_PLAYER'}</div>
+                    <div class="text-[10px] text-zinc-500 font-mono">${c.gameTitle || 'PLACE_ID ' + (c.placeId || 'ACTIVE')}</div>
+                  </div>
+                  <span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">ID:${c.id ? c.id.slice(0,6) : '8836'}</span>
+                </div>
+              `).join("");
+            } else if (realOnline) {
+              modalClientsList.innerHTML = `
+                <div class="p-2.5 rounded bg-zinc-950 border border-emerald-500/20 flex items-center justify-between text-xs">
+                  <div>
+                    <div class="font-bold text-white font-mono flex items-center gap-1.5">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> REAL EXECUTOR
+                    </div>
+                    <div class="text-[10px] text-zinc-500 font-mono">PORT 3872 · STDIO RELAY ACTIVE</div>
+                  </div>
+                  <span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">ATTACHED</span>
+                </div>`;
+            }
+          }
+
+          // Laser highlight Real MCP node in 3D scene
+          nodeMeshes.forEach(nm => {
+            if (nm.node.id === "real-mcp" || nm.node.id === "mcp-executor") {
+              if (nm.cage) {
+                nm.cage.material.color.setHex(EVENT_LASER_COLOR);
+                nm.cage.material.opacity = 0.55;
+              }
+            }
+          });
+        } else {
+          if (mcpStatusDot) mcpStatusDot.className = "relative inline-flex rounded-full h-2 w-2 bg-amber-400";
+          if (mcpPingDot) mcpPingDot.classList.add("hidden");
+          if (mcpStatusText) {
+            mcpStatusText.innerText = "STANDBY (0)";
+            mcpStatusText.className = "text-[10px] font-mono text-amber-300 leading-tight";
+          }
+          if (mcpBadge) {
+            mcpBadge.classList.remove("stealth-border-active");
+            mcpBadge.classList.add("border-white/10");
+          }
+
+          if (modalMcpState) {
+            modalMcpState.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> LISTENING`;
+            modalMcpState.className = "px-2 py-0.5 rounded font-bold text-[10px] bg-amber-500/10 text-amber-300 border border-amber-500/20 flex items-center gap-1.5";
+          }
+          if (modalClientCount) modalClientCount.innerText = "0 ACTIVE";
+        }
+      } catch (err) {
+        if (mcpStatusDot) mcpStatusDot.className = "relative inline-flex rounded-full h-2 w-2 bg-rose-500";
+        if (mcpPingDot) mcpPingDot.classList.add("hidden");
+        if (mcpStatusText) {
+          mcpStatusText.innerText = "OFFLINE";
+          mcpStatusText.className = "text-[10px] font-mono text-rose-400 leading-tight";
+        }
+        if (mcpBadge) mcpBadge.classList.remove("stealth-border-active");
+      }
+    }
+
+    setInterval(pollMcpStatus, 2500);
+    pollMcpStatus();
+
+    // Launch
+    initThree();
+    animate();
+  </script>
+</body>
+</html>
