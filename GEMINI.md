@@ -39,7 +39,7 @@
 | เกม | สถานะ | ไฟล์ |
 |-----|-------|------|
 | Blade Ball | ✅ v3.0 Done | `TwoK_BladeBall_Hub_v3.luau` |
-| WarzPVP | 🔄 In Progress | `WarZPVP.luau` |
+| WarzPVP | ✅ v3.0 Done | `WarZPVP.luau` |
 | Ride a Pet | ⏳ Queue | `RideAPet.luau` |
 | Loot to Forge | ⏳ Queue | `LootToForge.luau` |
 | OpenSea Hub | ⏳ Queue | `OpenSeaHub.luau` |

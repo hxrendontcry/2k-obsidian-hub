@@ -42,6 +42,13 @@
 - Overhauled 3D Knowledge Graph Web UI (`3D_Knowledge_Graph.html`) to Style 3: Cyberpunk Obsidian Stealth.
 - Structure: Smoke Glass (`rgba(7, 8, 12, 0.84)`, 24px blur) with ultra-thin 1px titanium borders (`rgba(255, 255, 255, 0.08)`).
 - Lighting & Color: Monochrome Black-Gray-White palette (Platinum, Graphite Slate, Titanium, Silver, Carbon, White) with high-intensity laser highlight (`#00ff88`) reserved strictly for telemetry triggers and target locks.
-- 3D Geometry: Converted nodes from spheres to faceted stealth crystals (Icosahedrons with flat shading) encased in rotating wireframe outer cages and razor-thin titanium filaments.
-- In-game 2K Script UI: Remains untouched as the iconic Cyber-Neon (Electric Cyan + Obsidian Navy).
+
+## [2026-10-02] release | WarzPVP Master Hub v3.0 Complete
+- Reverse engineered WarzPVP PlaceId `135187059974536`, Universe `10763998990`.
+- Extracted and hooked remotes: `ConfirmRespawn`, `PickupLoot`, `UseItem`, `BuyItem`, `CombineMags`, `BagAllToStash`, `JoinMap`, `ReloadRequest`.
+- Reverse-engineered `WarzSpread` math engine, implementing zero spread hook on `CalcSpread` and `ApplySpread`.
+- Built safe Hitbox Expander, No Recoil, Fast Reload, and Auto-Heal engine.
+- Implemented dual-layer ESP: Full Player ESP (3D Highlight, Name, Distance, HP bar, Tracers) + Loot ESP (color-coded item rarity tags).
+- Reverse engineered all 12 official game map coordinates from `ReplicatedStorage.Shared.Config.MapCatalog` into Tactical Teleport module.
+- Applied Stealth Kick Interceptor via `__namecall` metamethod.
 
